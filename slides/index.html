@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CoinPulse · Seminário de React</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+  @font-face {
+    font-family: "Geist";
+    src: url("fonts/geist-latin-wght-normal.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  :root {
+    --bg: oklch(0.165 0.006 260);
+    --surface: oklch(0.205 0.007 260);
+    --raised: oklch(0.25 0.008 260);
+    --line: oklch(0.3 0.008 260);
+    --ink: oklch(0.97 0.003 260);
+    --muted: oklch(0.74 0.012 260);
+    --up: oklch(0.8 0.18 152);
+    --down: oklch(0.72 0.17 40);
+    --code-key: oklch(0.78 0.13 300);
+    --code-str: oklch(0.82 0.12 85);
+    --code-fn: oklch(0.8 0.11 230);
+    --code-tag: oklch(0.78 0.14 25);
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  ::selection { background: color-mix(in oklch, var(--up) 35%, transparent); }
+
+  /* Palco 1600x900, escalado para caber em qualquer tela */
+  .stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1600px;
+    height: 900px;
+    transform-origin: center;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 96px 120px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 220ms;
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  h1 { font-size: 88px; font-weight: 650; letter-spacing: -0.035em; line-height: 1; text-wrap: balance; }
+  h2 { font-size: 60px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.05; text-wrap: balance; }
+  .lead { margin-top: 24px; font-size: 30px; line-height: 1.4; color: var(--muted); max-width: 44ch; text-wrap: pretty; }
+  .lead strong { color: var(--ink); font-weight: 600; }
+  .accent { color: var(--up); }
+
+  .cols { margin-top: 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+  .cols.wide-left { grid-template-columns: 1.25fr 1fr; }
+
+  p.body { font-size: 28px; line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+  p.body strong { color: var(--ink); font-weight: 600; }
+  p.body + p.body { margin-top: 24px; }
+
+  ul.points { list-style: none; display: grid; gap: 22px; font-size: 28px; line-height: 1.35; }
+  ul.points li { display: grid; grid-template-columns: 28px 1fr; gap: 16px; align-items: baseline; }
+  ul.points li::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--up); transform: translateY(-3px); }
+  ul.points li span { color: var(--muted); }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px 36px;
+    font-family: var(--mono);
+    font-size: 24px;
+    line-height: 1.55;
+    color: var(--ink);
+    overflow: hidden;
+    white-space: pre;
+    /* Sem ligaduras: "=>" continua aparecendo como "=>" para quem está aprendendo */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
+  pre .k { color: var(--code-key); }
+  pre .s { color: var(--code-str); }
+  pre .f { color: var(--code-fn); }
+  pre .t { color: var(--code-tag); }
+  pre .c { color: var(--muted); font-style: italic; }
+  pre .hl { background: color-mix(in oklch, var(--up) 18%, transparent); border-radius: 4px; }
+  pre .bad { color: var(--down); }
+  pre .good { color: var(--up); }
+  .caption { margin-top: 14px; font-size: 20px; color: var(--muted); }
+
+  kbd {
+    font-family: var(--mono);
+    font-size: 0.8em;
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+    border-bottom-width: 3px;
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  code.inline { font-family: var(--mono); font-size: 0.85em; color: var(--ink); background: var(--surface); padding: 2px 8px; border-radius: 6px; }
+
+  /* Capa */
+  .cover { justify-content: center; }
+  .cover .mark { width: 120px; height: 120px; color: var(--up); margin-bottom: 48px; }
+  .cover h1 { font-size: 120px; }
+  .cover .lead { max-width: 34ch; }
+  .cover .meta { margin-top: auto; font-size: 22px; color: var(--muted); display: flex; gap: 32px; }
+
+  /* Screenshot */
+  .shot { border-radius: 16px; border: 1px solid var(--line); overflow: hidden; align-self: start; box-shadow: 0 30px 60px -20px oklch(0 0 0 / 0.6); }
+  .shot img { display: block; width: 100%; height: auto; }
+
+  /* Diagrama de componentes */
+  .wire { position: relative; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 20px; display: grid; grid-template-columns: 1fr 1.15fr; grid-template-rows: auto 1fr; gap: 16px; font-family: var(--mono); font-size: 18px; font-variant-ligatures: none; white-space: nowrap; }
+  .wire > div { border: 2px dashed var(--line); border-radius: 10px; padding: 14px 16px; color: var(--muted); }
+  .wire .header { grid-column: 1 / -1; color: var(--ink); border-color: var(--up); border-style: solid; }
+  .wire .main { display: grid; gap: 12px; align-content: start; }
+  .wire .main div, .wire .side div { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--bg); }
+  .wire .side { display: grid; gap: 12px; align-content: start; }
+  .wire .tall { height: 150px; }
+  .wire .lt { color: var(--muted); }
+
+  /* Extensões */
+  .ext { list-style: none; display: grid; grid-template-columns: 1fr 1fr; column-gap: 72px; row-gap: 26px; margin-top: 48px; }
+  .ext li { display: grid; gap: 4px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .ext .name { font-size: 28px; font-weight: 600; display: flex; align-items: baseline; gap: 14px; }
+  .ext .why { font-size: 22px; color: var(--muted); line-height: 1.35; }
+  .tag { font-size: 16px; font-weight: 600; color: var(--bg); background: var(--up); border-radius: 999px; padding: 3px 12px; letter-spacing: 0.01em; }
+
+  /* Atalhos */
+  table.keys { border-collapse: collapse; font-size: 24px; width: 100%; }
+  table.keys td { padding: 13px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.keys td:first-child { width: 46%; }
+  table.keys td:last-child { color: var(--muted); }
+
+  /* Semana */
+  ol.week { list-style: none; margin-top: 56px; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 2px solid var(--line); }
+  ol.week li { padding: 28px 28px 0 0; position: relative; }
+  ol.week li::before { content: ""; position: absolute; top: -8px; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--up); }
+  ol.week .day { font-size: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  ol.week .title { margin-top: 6px; font-size: 32px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+  ol.week .what { margin-top: 16px; font-size: 21px; color: var(--muted); line-height: 1.45; }
+  ol.week .what code { font-family: var(--mono); font-size: 0.9em; color: var(--ink); }
+
+  /* Rotas */
+  .routes { display: grid; gap: 20px; align-content: start; }
+  .route { display: grid; grid-template-columns: 340px 1fr; align-items: center; gap: 24px; padding: 22px 28px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .route code { font-family: var(--mono); font-size: 26px; color: var(--up); }
+  .route span { font-size: 24px; color: var(--muted); }
+
+  /* Interface do deck */
+  .progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--up); transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .counter { position: fixed; right: 24px; bottom: 16px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hint { position: fixed; left: 24px; bottom: 16px; font-size: 14px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .slide.active, .progress { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- 1. Capa -->
+  <section class="slide cover">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="2.25" />
+      <polyline points="3.5,17 10,17 13,10.5 17.5,22 20.5,14.5 28.5,14.5" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <h1>CoinPulse</h1>
+    <p class="lead">Uma semana de React construindo, do zero e ao vivo, uma carteira de criptomoedas em <strong>tempo real</strong>.</p>
+    <p class="meta"><span>Seminário de React</span><span>Ciência da Computação</span><span>PUC Minas Poços de Caldas</span></p>
+  </section>
+
+  <!-- 2. O que vamos construir -->
+  <section class="slide">
+    <h2>O que vamos construir</h2>
+    <div class="cols wide-left">
+      <div class="shot"><img src="img/painel.png" alt="Painel do CoinPulse: total da carteira, gráfico do Bitcoin, lista de moedas ao vivo e formulário de compra" /></div>
+      <ul class="points">
+        <li><div>Preços ao vivo <span>direto da Binance, sem recarregar a página</span></div></li>
+        <li><div>Gráfico que se mexe sozinho <span>de 1 dia a 1 mês</span></div></li>
+        <li><div>Contas exatas <span>até 0,00000001 BTC, sem erro de arredondamento</span></div></li>
+        <li><div>Dólar cripto × dólar oficial <span>o câmbio de verdade</span></div></li>
+        <li><div>No ar na sexta <span>com um link seu para mostrar</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3. React em uma frase -->
+  <section class="slide">
+    <h2>React em uma frase</h2>
+    <p class="lead">A tela é uma <strong>função dos dados</strong>. Você muda os dados; o React redesenha a tela.</p>
+    <div class="cols">
+      <div>
+<pre><span class="c">// JavaScript puro: você mexe na tela</span>
+<span class="k">const</span> el = document.<span class="f">querySelector</span>(<span class="s">'#total'</span>)
+el.textContent = <span class="f">formatar</span>(total)
+el.classList.<span class="f">toggle</span>(<span class="s">'prejuizo'</span>, total &lt; 0)
+<span class="c">// ...e lembra de fazer isso em</span>
+<span class="c">// todo lugar que o total aparece</span></pre>
+        <p class="caption">Imperativo: <em>como</em> mudar a tela, passo a passo.</p>
+      </div>
+      <div>
+<pre><span class="c">// React: você descreve a tela</span>
+<span class="k">function</span> <span class="f">Total</span>({ total }) {
+  <span class="k">return</span> (
+    <span class="t">&lt;p</span> className={total &lt; 0 ? <span class="s">'down'</span> : <span class="s">'up'</span>}<span class="t">&gt;</span>
+      {<span class="f">formatar</span>(total)}
+    <span class="t">&lt;/p&gt;</span>
+  )
+}</pre>
+        <p class="caption">Declarativo: <em>como a tela deve ser</em> para cada valor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. JSX -->
+  <section class="slide">
+    <h2>JSX: HTML dentro do JavaScript</h2>
+    <div class="cols">
+<pre><span class="k">const</span> moedas = [<span class="s">'BTC'</span>, <span class="s">'ETH'</span>, <span class="s">'SOL'</span>]
+
+<span class="k">return</span> (
+  <span class="t">&lt;ul</span> <span class="hl">className</span>=<span class="s">"lista"</span><span class="t">&gt;</span>
+    {moedas.<span class="f">map</span>((m) =&gt; (
+      <span class="t">&lt;li</span> <span class="hl">key</span>={m}<span class="t">&gt;</span>{m}<span class="t">&lt;/li&gt;</span>
+    ))}
+  <span class="t">&lt;/ul&gt;</span>
+)</pre>
+      <ul class="points">
+        <li><div><code class="inline">{ }</code> abre JavaScript <span>dentro do HTML: variáveis, contas, map</span></div></li>
+        <li><div><code class="inline">className</code> no lugar de class <span>porque class já é palavra do JavaScript</span></div></li>
+        <li><div><code class="inline">key</code> em toda lista <span>para o React saber qual item mudou</span></div></li>
+        <li><div>Um elemento pai só <span>ou um fragmento: &lt;&gt;...&lt;/&gt;</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. Componentes e props -->
+  <section class="slide">
+    <h2>Componentes e props</h2>
+    <p class="lead">O app é um quebra-cabeça de funções. Cada peça recebe dados pelas <strong>props</strong>.</p>
+    <div class="cols">
+      <div class="wire" aria-label="O CoinPulse dividido em componentes">
+        <div class="header">&lt;Header /&gt;</div>
+        <div class="main">
+          <div>&lt;PortfolioSummary /&gt;</div>
+          <div class="tall">&lt;PriceChart /&gt;</div>
+          <div>&lt;PurchaseTable /&gt;</div>
+        </div>
+        <div class="side">
+          <div class="tall">&lt;MarketList /&gt;</div>
+          <div>&lt;AddPurchaseForm /&gt;</div>
+          <div>&lt;DollarCompare /&gt;</div>
+        </div>
+      </div>
+      <div>
+<pre><span class="c">// Quem usa passa a prop...</span>
+<span class="t">&lt;Change</span> percent={<span class="hl">variacao</span>} <span class="t">/&gt;</span>
+
+<span class="c">// ...e o componente recebe</span>
+<span class="k">function</span> <span class="f">Change</span>({ <span class="hl">percent</span> }) {
+  <span class="k">return</span> <span class="t">&lt;span&gt;</span>{percent}%<span class="t">&lt;/span&gt;</span>
+}</pre>
+        <p class="caption">Props descem de pai para filho, e o filho não pode alterá-las.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Estado -->
+  <section class="slide">
+    <h2>Estado: o que muda na tela</h2>
+    <div class="cols">
+<pre><span class="k">const</span> [compras, setCompras] = <span class="f">useState</span>([])
+
+<span class="k">function</span> <span class="f">adicionar</span>(compra) {
+  <span class="c">// nunca: compras.push(compra)</span>
+  <span class="f">setCompras</span>([...compras, compra])
+}</pre>
+      <div>
+        <p class="body"><strong><code class="inline">useState</code> devolve duas coisas:</strong> o valor atual e a função que troca o valor.</p>
+        <p class="body">Chamou o <code class="inline">set</code>? O React redesenha <strong>esse componente e os filhos dele</strong>, e só altera na tela o que mudou.</p>
+        <p class="body">Por isso criamos um array novo em vez de usar <code class="inline">push</code>: o React compara o antigo com o novo para saber se algo mudou.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Efeitos -->
+  <section class="slide">
+    <h2>Efeitos: falar com o mundo lá fora</h2>
+    <div class="cols">
+<pre><span class="f">useEffect</span>(() =&gt; {
+  <span class="k">const</span> socket = <span class="k">new</span> <span class="f">WebSocket</span>(url)
+  socket.onmessage = (e) =&gt; <span class="f">setPrecos</span>(...)
+
+  <span class="hl"><span class="k">return</span> () =&gt; socket.<span class="f">close</span>()</span>  <span class="c">// cleanup</span>
+}, [url])  <span class="c">// roda de novo se url mudar</span></pre>
+      <div>
+        <p class="body">Tudo que <strong>não é desenhar a tela</strong> vai num efeito: API, WebSocket, localStorage, timers.</p>
+        <p class="body">O <strong>cleanup</strong> desfaz o que o efeito fez. Sem ele, cada vez que o componente monta abre uma conexão nova, e elas se acumulam.</p>
+        <p class="body">A lista no final diz <strong>quando</strong> o efeito roda de novo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Hooks -->
+  <section class="slide">
+    <h2>Hooks: funções que começam com <span class="accent">use</span></h2>
+    <div class="cols">
+      <div>
+        <p class="body"><strong>Do React</strong></p>
+        <ul class="points" style="margin-top: 24px">
+          <li><div>useState <span>guardar o que muda</span></div></li>
+          <li><div>useEffect <span>sincronizar com o mundo de fora</span></div></li>
+          <li><div>useRef <span>guardar algo sem redesenhar</span></div></li>
+        </ul>
+      </div>
+      <div>
+        <p class="body"><strong>Nossos, criados durante a semana</strong></p>
+        <ul class="points" style="margin-top: 24px">
+          <li><div>useLocalStorage <span>estado que sobrevive ao F5</span></div></li>
+          <li><div>useLivePrices <span>preços pelo WebSocket</span></div></li>
+          <li><div>useCandles <span>histórico do gráfico</span></div></li>
+        </ul>
+      </div>
+    </div>
+    <p class="caption" style="font-size: 24px; margin-top: 64px">Regra: chame hooks sempre no topo do componente, nunca dentro de <code class="inline">if</code> ou de loops.</p>
+  </section>
+
+  <!-- 9. Rotas -->
+  <section class="slide">
+    <h2>Rotas: uma URL, uma tela</h2>
+    <p class="lead">Com o <strong>react-router</strong>, a URL decide qual página aparece, e o navegador não recarrega.</p>
+    <div class="routes" style="margin-top: 56px">
+      <div class="route"><code>/</code><span>Painel: total, gráfico e mercado</span></div>
+      <div class="route"><code>/compras?moeda=BTC</code><span>Todas as compras, com o filtro guardado na URL</span></div>
+      <div class="route"><code>/qualquer-coisa</code><span>Página 404</span></div>
+    </div>
+  </section>
+
+  <!-- 10. VS Code: extensões -->
+  <section class="slide">
+    <h2>VS Code: extensões</h2>
+    <ul class="ext">
+      <li><span class="name">Prettier</span><span class="why">Formata o código ao salvar. Ninguém perde tempo alinhando chave.</span></li>
+      <li><span class="name">Tailwind CSS IntelliSense</span><span class="why">Autocompleta as classes e mostra o CSS de cada uma.</span></li>
+      <li><span class="name">Color Highlight</span><span class="why">Pinta no editor a cor de cada valor do CSS.</span></li>
+      <li><span class="name">Omni Theme</span><span class="why">Tema escuro confortável para muitas horas de código.</span></li>
+      <li><span class="name">Fluent Icons</span><span class="why">Ícones da interface do VS Code mais limpos.</span></li>
+      <li><span class="name">Error Lens <span class="tag">recomendo também</span></span><span class="why">Mostra o erro na própria linha, sem passar o mouse.</span></li>
+      <li><span class="name">ES7+ React snippets <span class="tag">recomendo também</span></span><span class="why">Atalhos como <code class="inline">rfc</code> criam um componente inteiro.</span></li>
+      <li><span class="name">Oxc <span class="tag">recomendo também</span></span><span class="why">Mostra no editor os avisos do lint do projeto (oxlint).</span></li>
+    </ul>
+  </section>
+
+  <!-- 11. VS Code: configurações e atalhos -->
+  <section class="slide">
+    <h2>VS Code: configurações e atalhos</h2>
+    <div class="cols">
+      <div>
+<pre style="font-size: 21px"><span class="c">// Ctrl+Shift+P → "Open User Settings (JSON)"</span>
+{
+  <span class="s">"editor.formatOnSave"</span>: <span class="k">true</span>,
+  <span class="s">"editor.defaultFormatter"</span>:
+    <span class="s">"esbenp.prettier-vscode"</span>,
+  <span class="s">"editor.linkedEditing"</span>: <span class="k">true</span>,
+  <span class="s">"emmet.includeLanguages"</span>: {
+    <span class="s">"javascript"</span>: <span class="s">"javascriptreact"</span>
+  }
+}</pre>
+        <p class="caption">linkedEditing renomeia a tag de fechamento junto. Emmet: <code class="inline">ul&gt;li*3</code> + Tab no JSX.</p>
+      </div>
+      <table class="keys">
+        <tr><td><kbd>Ctrl</kbd> <kbd>P</kbd></td><td>Abrir arquivo pelo nome</td></tr>
+        <tr><td><kbd>Ctrl</kbd> <kbd>D</kbd></td><td>Selecionar a próxima ocorrência</td></tr>
+        <tr><td><kbd>Alt</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Mover a linha</td></tr>
+        <tr><td><kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>↓</kbd></td><td>Duplicar a linha</td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Renomear em todos os arquivos</td></tr>
+        <tr><td><kbd>F12</kbd></td><td>Ir para a definição</td></tr>
+        <tr><td><kbd>Ctrl</kbd> <kbd>`</kbd></td><td>Abrir o terminal</td></tr>
+        <tr><td><kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>P</kbd></td><td>Paleta de comandos</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 12. A semana -->
+  <section class="slide">
+    <h2>A semana</h2>
+    <ol class="week">
+      <li><div class="day">Segunda</div><div class="title">Componentes</div><div class="what">JSX, props, <code>map</code> e <code>key</code>. O painel na tela com dados fixos.</div></li>
+      <li><div class="day">Terça</div><div class="title">Estado e números</div><div class="what"><code>useState</code>, formulário e por que <code>0.1 + 0.2</code> não dá 0.3.</div></li>
+      <li><div class="day">Quarta</div><div class="title">Tempo real</div><div class="what"><code>useEffect</code>, localStorage e WebSocket com preços ao vivo.</div></li>
+      <li><div class="day">Quinta</div><div class="title">Gráfico</div><div class="what">Recharts, <code>useRef</code> e o câmbio do dólar.</div></li>
+      <li><div class="day">Sexta</div><div class="title">Rotas e deploy</div><div class="what">react-router, filtros na URL e o app no ar na Vercel.</div></li>
+    </ol>
+  </section>
+
+  <!-- 13. Bora pro código -->
+  <section class="slide cover">
+    <h1>Bora pro código</h1>
+<pre style="margin-top: 56px; font-size: 28px; max-width: 1100px"><span class="c"># precisa do Node 20 ou mais novo: node -v</span>
+npm create vite@latest coinpulse -- --template react
+cd coinpulse
+npm install
+npm run dev</pre>
+  </section>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<p class="hint">← → navegar · F tela cheia</p>
+<p class="counter" id="counter"></p>
+
+<script>
+  const stage = document.getElementById('stage')
+  const slides = [...document.querySelectorAll('.slide')]
+  const progress = document.getElementById('progress')
+  const counter = document.getElementById('counter')
+  let current = 0
+
+  function fit() {
+    const scale = Math.min(innerWidth / 1600, innerHeight / 900)
+    stage.style.transform = `translate(-50%, -50%) scale(${scale})`
+  }
+
+  function show(index) {
+    current = Math.max(0, Math.min(slides.length - 1, index))
+    slides.forEach((slide, i) => slide.classList.toggle('active', i === current))
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`
+    counter.textContent = `${current + 1} / ${slides.length}`
+    history.replaceState(null, '', `#${current + 1}`)
+  }
+
+  addEventListener('keydown', (event) => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(event.key)) show(current + 1)
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(event.key)) show(current - 1)
+    else if (event.key === 'Home') show(0)
+    else if (event.key === 'End') show(slides.length - 1)
+    else if (event.key.toLowerCase() === 'f') {
+      if (document.fullscreenElement) document.exitFullscreen()
+      else document.documentElement.requestFullscreen()
+    } else return
+    event.preventDefault()
+  })
+
+  addEventListener('click', (event) => {
+    if (event.target.closest('a, button')) return
+    show(event.clientX > innerWidth / 3 ? current + 1 : current - 1)
+  })
+
+  addEventListener('resize', fit)
+  fit()
+  show(Number(location.hash.slice(1)) - 1 || 0)
+</script>
+</body>
+</html>
