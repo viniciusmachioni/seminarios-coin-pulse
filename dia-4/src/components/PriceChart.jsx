@@ -1,24 +1,14 @@
-import Big from 'big.js'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useCandles } from '../hooks/useCandles'
 import { RANGES } from '../lib/binance'
 import { formatPrice } from '../lib/format'
-import { Change } from './Change'
 import { LivePrice } from './LivePrice'
 
 // O Recharts escreve as cores como atributos SVG, que não leem var(--...)
-const UP = 'oklch(0.8 0.18 152)'
-const DOWN = 'oklch(0.72 0.17 40)'
-
-const RANGE_LABELS = { '1D': '1 dia', '7D': '7 dias', '30D': '30 dias' }
+const COLOR = 'oklch(0.8 0.18 152)'
 
 export function PriceChart({ coin, live, range, onRangeChange }) {
   const { candles, status } = useCandles(coin.pair, range)
-
-  const first = candles[0]?.price
-  const last = candles[candles.length - 1]?.price
-  const rangePercent = first ? new Big(last).minus(first).div(first).times(100) : null
-  const color = rangePercent?.lt(0) ? DOWN : UP
 
   return (
     <section aria-labelledby="chart-title" className="mt-10">
@@ -28,14 +18,8 @@ export function PriceChart({ coin, live, range, onRangeChange }) {
           <h2 id="chart-title" className="font-medium">
             {coin.name} <span className="text-muted">{coin.symbol}</span>
           </h2>
-          <p className="flex flex-wrap items-center gap-x-2 text-sm">
+          <p className="text-sm">
             <LivePrice value={live?.price} />
-            {rangePercent && (
-              <>
-                <Change percent={rangePercent} />
-                <span className="text-muted">em {RANGE_LABELS[range]}</span>
-              </>
-            )}
           </p>
         </div>
       </div>
@@ -50,23 +34,25 @@ export function PriceChart({ coin, live, range, onRangeChange }) {
         )}
 
         {status === 'ready' && (
-          <ResponsiveContainer width="100%" height="100%" className="motion-safe:animate-fade-in">
-            <AreaChart data={candles} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={color} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0} />
-                </linearGradient>
-              </defs>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={candles}>
               <XAxis dataKey="time" hide />
               <YAxis domain={['dataMin', 'dataMax']} hide />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'oklch(0.45 0.01 260)' }} />
+              <Tooltip
+                formatter={(price) => formatPrice(String(price))}
+                labelFormatter={(time) => new Date(time).toLocaleString('pt-BR')}
+                contentStyle={{
+                  background: 'var(--color-raised)',
+                  border: '1px solid var(--color-line)',
+                  borderRadius: 8,
+                }}
+              />
               <Area
                 type="monotone"
                 dataKey="price"
-                stroke={color}
-                strokeWidth={2}
-                fill="url(#chart-fill)"
+                stroke={COLOR}
+                fill={COLOR}
+                fillOpacity={0.15}
                 isAnimationActive={false}
               />
             </AreaChart>
@@ -92,23 +78,5 @@ export function PriceChart({ coin, live, range, onRangeChange }) {
         ))}
       </div>
     </section>
-  )
-}
-
-function ChartTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null
-  const { time, price } = payload[0].payload
-  const date = new Date(time).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-
-  return (
-    <div className="rounded-md border border-line bg-raised px-3 py-2 text-sm shadow-lg">
-      <p className="font-medium tabular-nums">{formatPrice(String(price))}</p>
-      <p className="text-muted">{date}</p>
-    </div>
   )
 }

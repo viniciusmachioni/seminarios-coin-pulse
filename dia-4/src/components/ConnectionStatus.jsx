@@ -1,7 +1,7 @@
 const LABELS = {
   connecting: 'Conectando…',
   online: 'Ao vivo',
-  offline: 'Sem conexão, tentando de novo',
+  offline: 'Sem conexão. Recarregue a página',
 }
 
 export function ConnectionStatus({ status }) {

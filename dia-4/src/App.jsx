@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { AddPurchaseForm } from './components/AddPurchaseForm'
-import { DollarCompare } from './components/DollarCompare'
 import { Header } from './components/Header'
 import { MarketList } from './components/MarketList'
 import { PortfolioSummary } from './components/PortfolioSummary'
@@ -72,7 +71,6 @@ export default function App() {
         <aside className="divide-y divide-line self-start rounded-xl border border-line lg:sticky lg:top-6">
           <MarketList prices={prices} selected={selected} onSelect={setSelected} />
           <AddPurchaseForm prices={prices} onAdd={addPurchase} />
-          <DollarCompare cryptoDollar={cryptoDollar} />
         </aside>
       </main>
     </div>

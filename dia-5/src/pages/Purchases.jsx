@@ -1,74 +1,45 @@
-import Big from 'big.js'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PurchaseTable } from '../components/PurchaseTable'
 import { COINS } from '../data/coins'
-import { formatBRL } from '../lib/format'
-import { ORDERS, sortPurchases } from '../lib/purchases'
-
-const selectClass =
-  'mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink hover:border-muted/60 focus:border-accent focus:outline-none'
+import { sortPurchases } from '../lib/purchases'
 
 export function Purchases({ purchases, prices, onRemove }) {
-  // O filtro mora na URL: /compras?moeda=BTC&ordem=maior
+  // O filtro mora na URL: /compras?moeda=BTC
   const [searchParams, setSearchParams] = useSearchParams()
   const coin = searchParams.get('moeda') ?? ''
-  const order = ORDERS[searchParams.get('ordem')] ? searchParams.get('ordem') : 'recentes'
 
-  function updateParam(name, value) {
-    const next = new URLSearchParams(searchParams)
-    if (value) next.set(name, value)
-    else next.delete(name)
-    setSearchParams(next)
+  function changeCoin(symbol) {
+    setSearchParams(symbol ? { moeda: symbol } : {})
   }
 
-  // Estado derivado: filtra e ordena a cada renderização, sem tocar na lista original
-  const filtered = purchases.filter((purchase) => !coin || purchase.symbol === coin)
-  const visible = sortPurchases(filtered, order)
-  const invested = visible.reduce(
-    (total, purchase) => total.plus(new Big(purchase.quantity).times(purchase.price)),
-    new Big(0),
+  // Estado derivado: filtra a cada renderização, sem tocar na lista original
+  const visible = sortPurchases(
+    purchases.filter((purchase) => !coin || purchase.symbol === coin),
+    'recentes',
   )
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <h1 className="text-2xl font-semibold tracking-tight">Compras</h1>
       <p className="mt-1 text-sm text-muted">
-        {visible.length === 1 ? '1 compra' : `${visible.length} compras`} ·{' '}
-        <span className="tabular-nums">{formatBRL(invested.toFixed(2))}</span> investidos
+        {visible.length === 1 ? '1 compra' : `${visible.length} compras`}
       </p>
 
-      <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-2">
-        <label className="block text-sm text-muted">
-          Moeda
-          <select
-            value={coin}
-            onChange={(event) => updateParam('moeda', event.target.value)}
-            className={selectClass}
-          >
-            <option value="">Todas</option>
-            {COINS.map((item) => (
-              <option key={item.symbol} value={item.symbol}>
-                {item.name} ({item.symbol})
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block text-sm text-muted">
-          Ordenar por
-          <select
-            value={order}
-            onChange={(event) => updateParam('ordem', event.target.value)}
-            className={selectClass}
-          >
-            {Object.entries(ORDERS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <label className="mt-6 block text-sm text-muted sm:max-w-xs">
+        Moeda
+        <select
+          value={coin}
+          onChange={(event) => changeCoin(event.target.value)}
+          className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-ink hover:border-muted/60 focus:border-accent focus:outline-none"
+        >
+          <option value="">Todas</option>
+          {COINS.map((item) => (
+            <option key={item.symbol} value={item.symbol}>
+              {item.name} ({item.symbol})
+            </option>
+          ))}
+        </select>
+      </label>
 
       <div className="mt-6">
         {purchases.length === 0 ? (
@@ -83,7 +54,7 @@ export function Purchases({ purchases, prices, onRemove }) {
             Nenhuma compra de {coin} registrada.{' '}
             <button
               type="button"
-              onClick={() => updateParam('moeda', '')}
+              onClick={() => changeCoin('')}
               className="font-medium text-accent hover:underline hover:underline-offset-4"
             >
               Mostrar todas as moedas
